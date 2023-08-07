@@ -1,4 +1,6 @@
-use anyhow::{anyhow, Result};
+use std::{cell::RefCell, rc::Rc};
+
+use anyhow::{anyhow, Ok, Result};
 use futures::Future;
 use wasm_bindgen::{
     closure::{WasmClosure, WasmClosureFnOnce},
@@ -9,6 +11,8 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{
     CanvasRenderingContext2d, Document, HtmlCanvasElement, HtmlImageElement, Response, Window,
 };
+
+use crate::browser;
 
 macro_rules! log {
     ( $( $t:tt )* ) => {
@@ -99,4 +103,11 @@ pub fn closure_wrap<T: WasmClosure + ?Sized>(data: Box<T>) -> Closure<T> {
 
 pub fn create_raf_closure(f: impl FnMut(f64) + 'static) -> LoopClosure {
     closure_wrap(Box::new(f))
+}
+
+pub fn now() -> Result<f64> {
+    Ok(window()?
+        .performance()
+        .ok_or_else(|| anyhow!("Performance object not found"))?
+        .now())
 }
